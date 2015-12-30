@@ -1,5 +1,4 @@
 #include <Python.h>
-//#include <Python.h>
 #include "pin.H"
 #include "IMG.h"
 #include "INS.h"
@@ -27,9 +26,12 @@ void add_hook(PyObject*** hooks, PyObject* new_hook) {
     *hooks = hooks_list;
 }
 
-void Fini(INT32, VOID*) {
+void Fini(INT32 exitcode, VOID* data) {
+    PyObject* arglist;
+
+    arglist = Py_BuildValue("(i)", exitcode);
     for (int i=0; fini_functions[i]; i++) {
-        if (PyObject_CallObject(fini_functions[i], NULL) == NULL) {
+        if (PyObject_CallObject(fini_functions[i], arglist) == NULL) {
             PyErr_Print();
             exit(1);
         }
@@ -48,7 +50,7 @@ PyObject* Python_AddFiniFunction(PyObject* self, PyObject* args) {
 
     add_hook(&fini_functions, callback);
     return Py_BuildValue("O", Py_True);
-} 
+}
 
 PyObject* Python_TRACE_AddInstrumentFunction(PyObject* self, PyObject* args) {
     PyObject* callback;
@@ -61,7 +63,7 @@ PyObject* Python_TRACE_AddInstrumentFunction(PyObject* self, PyObject* args) {
 
     add_hook(&hooks_trace_instrument, callback);
     return Py_BuildValue("O", Py_True);
-} 
+}
 
 PyObject* Python_INS_AddInstrumentFunction(PyObject* self, PyObject* args) {
     PyObject* callback;
@@ -74,7 +76,7 @@ PyObject* Python_INS_AddInstrumentFunction(PyObject* self, PyObject* args) {
 
     add_hook(&hooks_instruction, callback);
     return Py_BuildValue("O", Py_True);
-} 
+}
 
 PyObject* Python_IMG_AddInstrumentFunction(PyObject* self, PyObject* args) {
     PyObject* callback;
